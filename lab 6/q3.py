@@ -24,89 +24,70 @@ sizes 10 and 30 and compare results.'''
 import random
 
 cost_matrix = [
-[4, 6, 8, 7, 5],
-[7, 5, 6, 8, 4],
-[6, 4, 7, 5, 8],
-[5, 8, 6, 4, 7],
-[8, 6, 5, 7, 4],
-[7, 4, 8, 6, 5],
-[6, 7, 4, 5, 8],
-[5, 6, 7, 8, 4],
-[4, 7, 5, 6, 8],
-[8, 5, 6, 4, 7]
+    [4,6,8,7,5],
+    [7,5,6,8,4],
+    [6,4,7,5,8],
+    [5,8,6,4,7],
+    [8,6,5,7,4],
+    [7,4,8,6,5],
+    [6,7,4,5,8],
+    [5,6,7,8,4],
+    [4,7,5,6,8],
+    [8,5,6,4,7]
 ]
 
-NUM_TASKS = 10
-NUM_MACHINES = 5
-
-# Create random chromosome
-def create_individual():
-    return [random.randint(0, 4) for _ in range(NUM_TASKS)]
-
-# Fitness = 1 / cost
-def fitness(individual):
-    total_cost = 0
-    for task in range(NUM_TASKS):
-        machine = individual[task]
-        total_cost += cost_matrix[task][machine]
-    return 1 / total_cost, total_cost
+# -------------------------
+# random chromosome
+# -------------------------
+def create():
+    return [random.randint(0, 4) for _ in range(10)]
 
 
-# Selection (top 50%)
-def select(population):
-    population.sort(key=lambda x: fitness(x)[0], reverse=True)
-    return population[:len(population)//2]
+# -------------------------
+# total cost
+# -------------------------
+def cost(chrom):
+    total = 0
+    for i in range(10):
+        total += cost_matrix[i][chrom[i]]
+    return total
 
 
-# Crossover
-def crossover(p1, p2):
-    point = random.randint(1, NUM_TASKS - 2)
-    return p1[:point] + p2[point:]
+# -------------------------
+# genetic algorithm
+# -------------------------
+def ga(pop_size):
+    population = [create() for _ in range(pop_size)]
 
+    for gen in range(100):
+        population.sort(key=cost)
 
-# Mutation
-def mutate(individual):
-    idx = random.randint(0, NUM_TASKS - 1)
-    individual[idx] = random.randint(0, 4)
-    return individual
+        parents = population[:pop_size//2]   # top 50%
+        new_pop = []
 
-
-# Genetic Algorithm
-def run_ga(pop_size):
-    population = [create_individual() for _ in range(pop_size)]
-
-    for generation in range(100):
-        population = sorted(population, key=lambda x: fitness(x)[0], reverse=True)
-
-        best_fit, best_cost = fitness(population[0])
-
-        # Selection
-        parents = select(population)
-
-        # New population
-        new_population = []
-
-        while len(new_population) < pop_size:
+        while len(new_pop) < pop_size:
             p1, p2 = random.sample(parents, 2)
-            child = crossover(p1, p2)
 
+            # crossover
+            point = random.randint(1, 8)
+            child = p1[:point] + p2[point:]
+
+            # mutation
             if random.random() < 0.1:
-                child = mutate(child)
+                idx = random.randint(0, 9)
+                child[idx] = random.randint(0, 4)
 
-            new_population.append(child)
+            new_pop.append(child)
 
-        population = new_population
+        population = new_pop
 
-    # Final best
-    best = max(population, key=lambda x: fitness(x)[0])
-    best_fit, best_cost = fitness(best)
+    best = min(population, key=cost)
 
-    print(f"\nPopulation Size = {pop_size}")
-    print("Best Chromosome:", best)
-    print("Total Cost:", best_cost)
-    print("Fitness:", best_fit)
+    print("\nPopulation =", pop_size)
+    print("Best chromosome:", best)
+    print("Total cost:", cost(best))
+    print("Fitness:", 1/cost(best))
 
 
-# Run for both sizes
-run_ga(10)
-run_ga(30)
+ga(10)
+ga(30)
