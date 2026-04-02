@@ -1,0 +1,75 @@
+
+def best_first(graph, start, goal, h):
+    """
+    graph: dict, adjacency list with (neighbor, cost) tuples
+    start: start node
+    goal: goal node
+    h: dict, heuristic values for each node
+    """
+    queue = [(h[start], start, [start])]  # (heuristic, node, path)
+    visited = []
+
+    while queue:
+        queue.sort()                    # pick smallest heuristic first
+        heuristic, node, path = queue.pop(0)
+
+        if node == goal:
+            return path
+
+        if node not in visited:
+            visited.append(node)
+
+            for child, _ in graph.get(node, []):  # ignore actual cost
+                queue.append((h[child], child, path + [child]))
+
+    return None
+
+def a_star(graph, start, goal, h):
+    """
+    graph: dict, adjacency list with (neighbor, cost) tuples
+    start: start node
+    goal: goal node
+    h: dict, heuristic values
+    """
+    queue = [(h[start], 0, start, [start])]  # (f= g+h, g, node, path)
+    visited = []
+
+    while queue:
+        queue.sort()                     # smallest f = g + h first
+        f, g, node, path = queue.pop(0)
+
+        if node == goal:
+            return path, g               # return path + actual cost
+
+        if node not in visited:
+            visited.append(node)
+
+            for child, cost in graph.get(node, []):
+                g_new = g + cost
+                f_new = g_new + h[child]
+                queue.append((f_new, g_new, child, path + [child]))
+
+    return None
+
+graph = {
+    'A': [('B', 1), ('C', 4)],
+    'B': [('D', 2), ('E', 5)],
+    'C': [('F', 1)],
+    'D': [],
+    'E': [('G', 1)],
+    'F': [],
+    'G': []
+}
+
+heuristic = {
+    'A': 7,
+    'B': 6,
+    'C': 2,
+    'D': 1,
+    'E': 0,
+    'F': 3,
+    'G': 0
+}
+
+print("Best-First Path:", best_first(graph, 'A', 'G', heuristic))
+print("A* Path & Cost:", a_star(graph, 'A', 'G', heuristic))
